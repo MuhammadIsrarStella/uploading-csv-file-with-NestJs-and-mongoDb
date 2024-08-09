@@ -1,14 +1,14 @@
 import * as XLSX from 'xlsx';
-import { FileProcessor } from '../../interfaces/file-processor.interface';
-import { DataObject, ProcessedData } from '../../interfaces/processed-data.interface';
+import { FileProcessor } from '../../interfaces/File-processor';
+import { DataObject, ProcessedData } from '../../interfaces/Processed-data';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { ExcelFileData, ExcelFileDataDocument } from '../../schema/excel-file.schema';
+import { ExcelFileData, ExcelFileDataDocument } from '../../schema/Excel-file-data';
 import * as sanitizeHtml from 'sanitize-html';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { ExcelFileProcessingException, InvalidDataException, InvalidHeaderException } from 'src/exceptions/excel-file-processing.exception';
-import { ProcessedDataDto } from 'src/dto/ProcessedDataDto';
+import { ExcelFileProcessingException, InvalidDataException, InvalidHeaderException } from '../../exceptions/excel-file-processing.exception';
+import { ProcessedDataDto } from '../../dto/Processed-data-dto';
 
 
 export class ExcelFileProcessor implements FileProcessor {

@@ -1,9 +1,9 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { FileProcessor } from '../interfaces/file-processor.interface';
+import { FileProcessor } from '../interfaces/File-processor';
 import { ExcelFileProcessor } from './strategies/excel-file-processor.strategy';
-import { ExcelFileData, ExcelFileDataDocument } from '../schema/excel-file.schema';
+import { ExcelFileData, ExcelFileDataDocument } from '../schema/Excel-file-data';
 
 @Injectable()
 export class FileProcessingFactory {

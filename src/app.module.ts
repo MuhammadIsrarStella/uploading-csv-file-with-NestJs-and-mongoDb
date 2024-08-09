@@ -2,12 +2,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ExcelFileData, ExcelFileDataSchema } from './schema/excel-file.schema';
-import { ExcelFileUploadService } from './services/processing';
-import { FileProcessingFactory } from './services/file-processing-factory.service';
+import { ExcelFileData, ExcelFileDataSchema } from './schema/Excel-file-data';
+import { ExcelFileUploadService } from './services/Excel-file-upload-service';
+import { FileProcessingFactory } from './services/File-processing-factory';
 import { FileUploadController } from './controller/file-upload.controller';
 import { ExcelFileProcessor } from './services/strategies/excel-file-processor.strategy';
-import { FileFilterService } from './file-filter/file-filter.service';
+import { FileFilterService } from './file-filter/file-filter-service';
 
 @Module({
   imports: [

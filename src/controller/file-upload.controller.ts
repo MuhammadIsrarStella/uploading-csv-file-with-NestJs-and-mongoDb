@@ -10,8 +10,8 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadFileDto } from '../dto/upload-file.dto';
 import { ApiConsumes, ApiBody } from '@nestjs/swagger';
-import { ExcelFileUploadService } from 'src/services/processing';
-import { FileFilterPipe } from 'src/custom-file-decorator/file-filter.decorator';
+import { ExcelFileUploadService } from '../services/Excel-file-upload-service';
+import { FileFilterPipe } from '../custom-file-decorator/file-filter.decorator';
 
 
 @Controller('file-upload')

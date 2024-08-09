@@ -1,6 +1,6 @@
 import { ExcelFileProcessor } from './services/strategies/excel-file-processor.strategy';
 import { Model } from 'mongoose';
-import { ExcelFileDataDocument } from './schema/excel-file.schema';
+import { ExcelFileDataDocument } from './schema/Excel-file-data';
 
 jest.mock('xlsx');
 

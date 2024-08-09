@@ -1,5 +1,5 @@
 import { Injectable, PipeTransform, ArgumentMetadata, BadRequestException, Inject } from '@nestjs/common';
-import { FileFilterService } from 'src/file-filter/file-filter.service';
+import { FileFilterService } from '../file-filter/file-filter-service';
 
 @Injectable()
 export class FileFilterPipe implements PipeTransform {
