@@ -32,7 +32,6 @@ export class ExcelFileProcessor implements FileProcessor {
 
       return processedData;
     } catch (error) {
-      // console.error('Error processing Excel file:', error);
       throw error
     }
   }
