@@ -1,10 +1,10 @@
-
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { ExcelFileData, ExcelFileDataDocument } from 'src/schema/Excel-file-data';
 import { ExcelFileProcessor } from './strategies/excel-file-processor.strategy';
-import { ExcelFileData, ExcelFileDataDocument } from '../schema/Excel-file-data';
-import { ProcessedData } from '../interfaces/Processed-data';
+import { ProcessedData } from 'src/interfaces/Processed-data';
+
 
 @Injectable()
 export class ExcelFileUploadService {
@@ -17,7 +17,12 @@ export class ExcelFileUploadService {
     try {
       return await this.excelFileProcessor.processingFile(buffer);
     } catch (error) {
-      throw new BadRequestException('Invalid file format or data');
+      console.error('Error in uploadFile:', error.message);
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new BadRequestException(error.message || 'Invalid file format or data');
+      }
     }
   }
 }

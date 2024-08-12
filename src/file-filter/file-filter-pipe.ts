@@ -1,15 +1,28 @@
+import {
+  Injectable,
+  PipeTransform,
+  ArgumentMetadata,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 
-import { Injectable, PipeTransform, ArgumentMetadata, Inject } from '@nestjs/common';
-import { FileFilterService } from './file-filter-service';
 
 @Injectable()
 export class FileFilterPipe implements PipeTransform {
-  constructor(@Inject(FileFilterService) private readonly fileFilterService: FileFilterService) {}
-
-  transform(value: any, metadata: ArgumentMetadata) {
+  transform(value: Express.Multer.File, metadata: ArgumentMetadata) {
     if (metadata.type === 'custom') {
-      const file = value as Express.Multer.File;
-      this.fileFilterService.validateFileType(file);
+      const allowedMimeTypes = [
+        'text/csv',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
+        'application/vnd.ms-excel', 
+      ];
+
+      if (!allowedMimeTypes.includes(value.mimetype)) {
+        throw new HttpException(
+          'Invalid file format. Only CSV and Excel files are allowed.',
+          HttpStatus.BAD_REQUEST
+        );
+      }
     }
     return value;
   }

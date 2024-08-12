@@ -5,8 +5,9 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ExcelFileData, ExcelFileDataSchema } from './schema/Excel-file-data';
 import { ExcelFileUploadService } from './services/Excel-file-upload-service';
 import { FileProcessingFactory } from './services/File-processing-factory';
-import { FileUploadController } from './controller/file-upload.controller';
 import { ExcelFileProcessor } from './services/strategies/excel-file-processor.strategy';
+import { FileUploadController } from './controller/file-upload.controller';
+import { FileUploadService } from './services/strategies/FileUploadService';
 import { FileFilterService } from './file-filter/file-filter-service';
 
 @Module({
@@ -27,7 +28,7 @@ import { FileFilterService } from './file-filter/file-filter-service';
     }),
     MongooseModule.forFeature([{ name: ExcelFileData.name, schema: ExcelFileDataSchema }]),
   ],
-  providers: [ExcelFileUploadService, FileProcessingFactory, ExcelFileProcessor, FileFilterService],
+  providers: [ExcelFileUploadService, FileProcessingFactory, ExcelFileProcessor,FileFilterService,FileUploadService],
   controllers: [FileUploadController],
 })
 export class AppModule {}
