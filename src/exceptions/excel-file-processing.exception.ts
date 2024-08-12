@@ -2,7 +2,7 @@ import { BadRequestException } from '@nestjs/common';
 
 export class ExcelFileProcessingException extends BadRequestException {
   constructor(message: string) {
-    super(message); // Directly passing the message to the parent class
+    super(message); 
   }
 }
 
