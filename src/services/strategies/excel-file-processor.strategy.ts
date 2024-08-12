@@ -99,8 +99,7 @@ export class ExcelFileProcessor implements FileProcessor {
       HCHB_calculation: this.sanitizeInput(data['VisitCntAll'] as string || ''),
       total_pmt: this.sanitizeInput(data['Timing'] as string || ''),
       icdCodes: this.extractIcdCodes(data),
-      questionnaire: this.extractQuestionnaire(data),
-    };
+      questionnaire: this.extractQuestionnaire(data, headers, row),    };
 
     this.validateProcessedData(processedData);
     return processedData;
@@ -122,22 +121,32 @@ export class ExcelFileProcessor implements FileProcessor {
     return this.extractValues(data, 1, 15, 'M1023', false) as string[];
   }
 
-  private extractQuestionnaire(data: DataObject): { [key: string]: number[] } {
-    const questionnaire: { [key: string]: number[] } = {};
-    const alphanumericRegex = /^[a-zA-Z0-9]+$/;
-    for (const key of Object.keys(data)) {
-      if (alphanumericRegex.test(key)) {
-        const value = Number(data[key]);
-        if (!isNaN(value)) {
-          if (!questionnaire[key]) {
-            questionnaire[key] = [];
-          }
-          questionnaire[key].push(value);
-        }
+
+private extractQuestionnaire(data: DataObject, allColumns: string[], row: string[]): Record<string, any[]> {
+  let questionnaire: Record<string, any[]> = {};
+  const excludedFields = new Set([
+      "EpiID", "patient", "MRN", "chart_status", "PayorSourceName", "BranchCode",
+      "form", "form_status", "form_date", "user", "date_modified", "blink"
+  ]);
+
+  allColumns.forEach((header, index) => {
+      const cleanedHeader = header.replace(/\(\d+\)/g, ""); 
+      const value = row[index];
+
+      if (excludedFields.has(cleanedHeader)) {
+          return;
       }
-    }
-    return questionnaire;
-  }
+
+      if (value !== null && value !== "" && value !== 'NULL') {
+          if (!questionnaire[cleanedHeader]) {
+              questionnaire[cleanedHeader] = []; 
+          }
+          questionnaire[cleanedHeader].push(value); 
+      }
+  });
+
+  return questionnaire;
+}
 
   private extractValues(
     data: DataObject,

@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Schema as MongooseSchema } from 'mongoose';
 
 export type ExcelFileDataDocument = ExcelFileData & Document;
 
@@ -47,8 +47,9 @@ export class ExcelFileData {
   @Prop({ type: [String] })
   icdCodes: string[];
 
-  @Prop({ type: Map, of: [Number] })
-  questionnaire: Record<string, number[]>;
+  @Prop({ type: Map, of: [MongooseSchema.Types.Mixed] })
+  questionnaire: Record<string, (number | string)[]>;
+
 }
 
 export const ExcelFileDataSchema = SchemaFactory.createForClass(ExcelFileData);

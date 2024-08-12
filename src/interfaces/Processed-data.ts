@@ -13,8 +13,10 @@ export interface ProcessedData {
   HCHB_calculation: string;
   total_pmt: string;
   icdCodes: string[];
-  questionnaire: { [key: string]: number[] };
+  questionnaire: { [key: string]: (string | number)[] }; 
 }
+
 export interface DataObject {
   [key: string]: string | number;
 }
+
