@@ -122,26 +122,56 @@ export class ExcelFileProcessor implements FileProcessor {
   }
 
 
+// private extractQuestionnaire(data: DataObject, allColumns: string[], row: string[]): Record<string, any[]> {
+//   let questionnaire: Record<string, any[]> = {};
+//   const excludedFields = new Set([
+//       "EpiID", "patient", "MRN", "chart_status", "PayorSourceName", "BranchCode",
+//       "form", "form_status", "form_date", "user", "date_modified", "blink"
+//   ]);
+
+//   allColumns.forEach((header, index) => {
+//       const cleanedHeader = header.replace(/\(\d+\)/g, ""); 
+//       const value = row[index];
+
+//       if (excludedFields.has(cleanedHeader)) {
+//           return;
+//       }
+
+//       if (value !== null && value !== "" && value !== 'NULL') {
+//           if (!questionnaire[cleanedHeader]) {
+//               questionnaire[cleanedHeader] = []; 
+//           }
+//           questionnaire[cleanedHeader].push(value); 
+//       }
+//   });
+
+//   return questionnaire;
+// }
 private extractQuestionnaire(data: DataObject, allColumns: string[], row: string[]): Record<string, any[]> {
   let questionnaire: Record<string, any[]> = {};
+
+  // List of fields to exclude from the questionnaire
   const excludedFields = new Set([
       "EpiID", "patient", "MRN", "chart_status", "PayorSourceName", "BranchCode",
       "form", "form_status", "form_date", "user", "date_modified", "blink"
   ]);
 
+  // Iterate through all columns to find those that match the pattern M1021(1), GG0100A(1), etc.
   allColumns.forEach((header, index) => {
-      const cleanedHeader = header.replace(/\(\d+\)/g, ""); 
+      const cleanedHeader = header.replace(/\(\d+\)/g, ""); // Remove the (1), (2), etc. suffixes
       const value = row[index];
 
+      // Skip excluded fields
       if (excludedFields.has(cleanedHeader)) {
           return;
       }
 
-      if (value !== null && value !== "" && value !== 'NULL') {
+      // Ensure the value is not null, empty, 'NULL', or just whitespace
+      if (value !== null && value !== "" && value !== 'NULL' && !(typeof value === 'string' && value.trim() === "") && value !== undefined) {
           if (!questionnaire[cleanedHeader]) {
-              questionnaire[cleanedHeader] = []; 
+              questionnaire[cleanedHeader] = []; // Initialize the array if it doesn't exist
           }
-          questionnaire[cleanedHeader].push(value); 
+          questionnaire[cleanedHeader].push(value); // Add the value to the array
       }
   });
 
