@@ -1,80 +1,55 @@
+
 import * as XLSX from 'xlsx';
+import { Injectable } from '@nestjs/common';
 import { FileProcessor } from '../../interfaces/File-processor';
 import { DataObject, ProcessedData } from '../../interfaces/Processed-data';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ExcelFileData, ExcelFileDataDocument } from '../../schema/Excel-file-data';
-import * as sanitizeHtml from 'sanitize-html';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { ExcelFileProcessingException, InvalidDataException, InvalidHeaderException } from '../../exceptions/excel-file-processing.exception';
+import { ExcelFileProcessingException, InvalidHeaderException } from '../../exceptions/excel-file-processing.exception';
 import { ProcessedDataDto } from '../../dto/Processed-data-dto';
+import { PatientVisitService } from '../Patient-visit-service';
 
-
+@Injectable()
 export class ExcelFileProcessor implements FileProcessor {
   constructor(
-    @InjectModel(ExcelFileData.name) private readonly excelFileDataModel: Model<ExcelFileDataDocument>
+    @InjectModel(ExcelFileData.name) private readonly excelFileDataModel: Model<ExcelFileDataDocument>,
+    private readonly patientVisitService: PatientVisitService,
   ) {}
 
   async processingFile(buffer: Buffer): Promise<ProcessedData[]> {
-    try {
-      const jsonData = this.readExcelFile(buffer);
-      const headers = jsonData[0];
-
-      this.validateHeaders(headers);
-      this.validateData(jsonData);
-
-      const processedData = jsonData.slice(1).filter(row => row.length > 0).map(row => this.transformRowToProcessedData(row, headers));
-
-      for (const data of processedData) {
-        await this.upsertData(data);
-      }
-
-      return processedData;
-    } catch (error) {
-      throw error
-    }
-  }
-
-  private readExcelFile(buffer: Buffer): string[][] {
     const workbook = XLSX.read(buffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    return XLSX.utils.sheet_to_json<string[]>(worksheet, { header: 1 });
+    const worksheet = XLSX.utils.sheet_to_json<string[]>(workbook.Sheets[sheetName], { header: 1 });
+
+    let headers: string[] = [];
+    const processedData: ProcessedData[] = [];
+
+    worksheet.forEach((row, rowIndex) => {
+      if (rowIndex === 0) {
+        headers = row;
+        this.validateHeaders(headers);
+      } else {
+        if (!this.isRowEmpty(row)) {
+          const data = this.transformRowToProcessedData(row, headers);
+          this.patientVisitService.upsertPatientAndVisit(data);
+          this.storeDataInSchema(data); 
+          processedData.push(data);
+        }
+      }
+    });
+
+    return processedData;
   }
 
   private validateHeaders(headers: string[]): void {
     const requiredHeaders = ['MRN', 'BranchCode', 'form', 'admitDate'];
     const missingHeaders = requiredHeaders.filter(header => !headers.includes(header));
-    
+
     if (missingHeaders.length > 0) {
       throw new InvalidHeaderException(missingHeaders);
-    }
-  }
-  
-
-  private validateData(data: string[][]): void {
-    for (const row of data.slice(1)) {
-      row.forEach((cell, index) => {
-        if (typeof cell === 'string' && (cell.includes('<script>') || cell.includes('--'))) {
-          throw new InvalidDataException(index, cell);
-        }
-      });
-    }
-  }
-
-  private sanitizeInput(input: string): string {
-    return sanitizeHtml(input, {
-      allowedTags: [],
-      allowedAttributes: {}
-    });
-  }
-
-  private async validateProcessedData(data: any): Promise<void> {
-    const dto = plainToInstance(ProcessedDataDto, data);
-    const errors = await validate(dto);
-    if (errors.length > 0) {
-      throw new ExcelFileProcessingException(`Validation failed: ${errors.toString()}`);
     }
   }
 
@@ -84,6 +59,12 @@ export class ExcelFileProcessor implements FileProcessor {
     const fullName = this.sanitizeInput(data['patient'] as string || '');
     const [firstName, lastName] = this.splitFullName(fullName);
 
+    let visitDate = this.formatDate(this.sanitizeInput(data['admitDate'] as string || ''));
+    if (!visitDate) {
+      visitDate = new Date().toISOString().split('T')[0]; 
+    }
+
+ 
     const processedData = {
       fullName,
       firstName,
@@ -94,22 +75,104 @@ export class ExcelFileProcessor implements FileProcessor {
       branchCode: this.sanitizeInput(data['BranchCode'] as string || ''),
       visitType: this.sanitizeInput(data['form'] as string || ''),
       status: this.sanitizeInput(data['form_status'] as string || ''),
-      visitDate: this.sanitizeInput(data['form_date'] as string || ''),
+      visitDate,
       ZipCode: this.sanitizeInput(data['blink'] as string || '00000'),
-      HCHB_calculation: this.sanitizeInput(data['VisitCntAll'] as string || ''),
-      total_pmt: this.sanitizeInput(data['Timing'] as string || ''),
+      HCHB_calculation: this.handleNullOrEmpty(this.sanitizeInput(data['VisitCntAll'] as string || undefined)),
+      total_pmt: this.handleNullOrEmpty(this.sanitizeInput(data['Timing'] as string || undefined)),
       icdCodes: this.extractIcdCodes(data),
-      questionnaire: this.extractQuestionnaire(data, headers, row),    };
+      questionnaire: this.extractQuestionnaire(data, headers, row),
+    };
+    
 
     this.validateProcessedData(processedData);
     return processedData;
   }
 
+  private async storeDataInSchema(data: ProcessedData): Promise<void> {
+    try {
+      const newExcelFileData = new this.excelFileDataModel(data);
+      await newExcelFileData.save();
+    } catch (error) {
+      throw new ExcelFileProcessingException(`Failed to save data: ${error.message}`);
+    }
+  }
+
   private mapRowToDataObject(row: string[], headers: string[]): DataObject {
     return headers.reduce((acc: DataObject, header: string, index: number) => {
-      acc[header] = this.sanitizeInput(row[index] || '');
+      acc[header] = this.handleNullOrEmpty(this.sanitizeInput(row[index] || ''));
       return acc;
     }, {} as DataObject);
+  }
+
+  private formatDate(date: string): string {
+    if (!date) {
+      return '';  
+    }
+
+    const parsedDate = new Date(date);
+
+    if (isNaN(parsedDate.getTime())) {
+      throw new ExcelFileProcessingException(`Invalid date format: ${date}`);
+    }
+
+    return parsedDate.toISOString().split('T')[0];
+  }
+
+  private async validateProcessedData(data: any): Promise<void> {
+    const dto = plainToInstance(ProcessedDataDto, data);
+    const errors = await validate(dto);
+    if (errors.length > 0) {
+      throw new ExcelFileProcessingException(`Validation failed: ${errors.toString()}`);
+    }
+  }
+
+  private extractValues(data: DataObject, start: number, end: number, prefix: string, booleanCheck: boolean): (string | number)[] {
+    const values: (string | number)[] = [];
+    for (let i = start; i <= end; i++) {
+      const key = `${prefix}(${i})`;
+      if ((booleanCheck && (data[key] === '1' || data[key] === 1)) || (!booleanCheck && data[key] && data[key] !== 'NULL')) {
+        values.push(booleanCheck ? i : data[key]);
+      }
+    }
+    return values;
+  }
+
+  private extractQuestionnaire(data: DataObject, allColumns: string[], row: string[]): Record<string, any[]> {
+    let questionnaire: Record<string, any[]> = {};
+    const excludedFields = new Set([
+        "EpiID", "patient", "MRN", "chart_status", "PayorSourceName", "BranchCode",
+        "form", "form_status", "form_date", "user", "date_modified", "blink"
+    ]);
+
+    allColumns.forEach((header, index) => {
+        const cleanedHeader = header.replace(/\(\d+\)/g, ""); 
+        const value = row[index];
+
+        if (excludedFields.has(cleanedHeader)) {
+            return;
+        }
+
+        if (value !== null && value !== "" && value !== 'NULL' && !(typeof value === 'string' && value.trim() === "") && value !== undefined) {
+            if (!questionnaire[cleanedHeader]) {
+                questionnaire[cleanedHeader] = []; 
+            }
+            questionnaire[cleanedHeader].push(value); 
+        }
+    });
+
+    return questionnaire;
+  }
+
+  private sanitizeInput(input: any): string {
+    if (typeof input !== 'string') {
+      return ''; 
+    }
+
+    return input.replace(/<[^>]*>?/gm, '').trim(); 
+  }
+
+  private handleNullOrEmpty(value: string): string {
+    return value === '' || value === 'NULL' ? undefined : value;
   }
 
   private splitFullName(fullName: string): [string, string] {
@@ -121,65 +184,7 @@ export class ExcelFileProcessor implements FileProcessor {
     return this.extractValues(data, 1, 15, 'M1023', false) as string[];
   }
 
-private extractQuestionnaire(data: DataObject, allColumns: string[], row: string[]): Record<string, any[]> {
-  let questionnaire: Record<string, any[]> = {};
-  const excludedFields = new Set([
-      "EpiID", "patient", "MRN", "chart_status", "PayorSourceName", "BranchCode",
-      "form", "form_status", "form_date", "user", "date_modified", "blink"
-  ]);
-
-  allColumns.forEach((header, index) => {
-      const cleanedHeader = header.replace(/\(\d+\)/g, ""); 
-      const value = row[index];
-
-      if (excludedFields.has(cleanedHeader)) {
-          return;
-      }
-
-      if (value !== null && value !== "" && value !== 'NULL' && !(typeof value === 'string' && value.trim() === "") && value !== undefined) {
-          if (!questionnaire[cleanedHeader]) {
-              questionnaire[cleanedHeader] = []; 
-          }
-          questionnaire[cleanedHeader].push(value); 
-      }
-  });
-
-  return questionnaire;
-}
-
-  private extractValues(
-    data: DataObject,
-    start: number,
-    end: number,
-    prefix: string,
-    booleanCheck: boolean
-  ): (string | number)[] {
-    const values: (string | number)[] = [];
-    for (let i = start; i <= end; i++) {
-      const key = `${prefix}(${i})`;
-      if ((booleanCheck && (data[key] === '1' || data[key] === 1)) || (!booleanCheck && data[key] && data[key] !== 'NULL')) {
-        values.push(booleanCheck ? i : data[key]);
-      }
-    }
-    return values;
-  }
-
-  private async upsertData(data: ProcessedData): Promise<void> {
-    const { mrn, visitType, visitDate } = data;
-
-    const existingData = await this.excelFileDataModel.findOne({ mrn, visitType, visitDate }).exec();
-    
-    if (existingData) {
-      for (const key of Object.keys(data)) {
-        if (Array.isArray(data[key])) {
-          data[key] = [...new Set([...existingData[key], ...data[key]])];
-        } else {
-          data[key] = data[key] || existingData[key];
-        }
-      }
-      await this.excelFileDataModel.updateOne({ mrn, visitType, visitDate }, data).exec();
-    } else {
-      await this.excelFileDataModel.create(data);
-    }
+  private isRowEmpty(row: string[]): boolean {
+    return row.every(cell => !cell || (typeof cell === 'string' && cell.trim() === ''));
   }
 }

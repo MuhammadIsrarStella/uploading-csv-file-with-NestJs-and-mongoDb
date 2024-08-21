@@ -1,3 +1,4 @@
+
 import { Injectable, BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
 import { ExcelFileUploadService } from '../Excel-file-upload-service';
 
@@ -5,14 +6,17 @@ import { ExcelFileUploadService } from '../Excel-file-upload-service';
 export class FileUploadService {
   constructor(private readonly excelFileUploadService: ExcelFileUploadService) {}
 
-  async handleFileUpload(file: Express.Multer.File) {
+  async handleFileUpload(file: Express.Multer.File, operation: 'POST' | 'UPDATE') {
     if (!file) {
       throw new BadRequestException('File is required');
     }
 
     try {
-      const jsonData = await this.excelFileUploadService.uploadFile(file.buffer);
-      return jsonData;
+      if (operation === 'POST') {
+        return await this.excelFileUploadService.processNewFile(file.buffer);
+      } else if (operation === 'UPDATE') {
+        return await this.excelFileUploadService.updateExistingFile(file.buffer);
+      }
     } catch (error) {
       console.log("Error object:", error);
       console.log("Error message:", error.message);
@@ -38,3 +42,4 @@ export class FileUploadService {
     }
   }
 }
+

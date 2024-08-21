@@ -38,10 +38,10 @@ export class ExcelFileData {
   @Prop({ required: true })
   ZipCode: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   HCHB_calculation: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   total_pmt: string;
 
   @Prop({ type: [String] })

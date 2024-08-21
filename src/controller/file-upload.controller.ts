@@ -1,6 +1,8 @@
+
 import {
   Controller,
   Post,
+  Put,
   UseInterceptors,
   UploadedFile,
   UsePipes,
@@ -31,7 +33,28 @@ export class FileUploadController {
     @Res() res: Response
   ) {
     try {
-      const jsonData = await this.fileUploadService.handleFileUpload(file);
+      const jsonData = await this.fileUploadService.handleFileUpload(file, 'POST');
+      return res.status(HttpStatus.OK).json(jsonData);
+    } catch (error) {
+      error.response.path = res.req.url;
+      return res.status(error.status).json(error.response);
+    }
+  }
+
+  @Put('excel')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'CSV or Excel file update',
+    type: UploadFileDto,
+  })
+  @UsePipes(FileFilterPipe)
+  async updateFile(
+    @UploadedFile() file: Express.Multer.File,
+    @Res() res: Response
+  ) {
+    try {
+      const jsonData = await this.fileUploadService.handleFileUpload(file, 'UPDATE');
       return res.status(HttpStatus.OK).json(jsonData);
     } catch (error) {
       error.response.path = res.req.url;
