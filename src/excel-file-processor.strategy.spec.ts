@@ -154,7 +154,7 @@ describe('ExcelFileProcessor', () => {
 
       expect(XLSX.utils.sheet_to_json).toHaveBeenCalled();
       expect(transformRowToProcessedDataSpy).toHaveBeenCalled();
-      expect(patientVisitService.upsertPatientAndVisit).toHaveBeenCalled();
+      expect(patientVisitService.updatePatientAndVisit).toHaveBeenCalled();
       expect(result).toHaveLength(1);
     });
   });
