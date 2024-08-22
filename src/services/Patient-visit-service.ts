@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { ProcessedData } from 'src/interfaces/Processed-data';
+import { ProcessedData } from '../interfaces/Processed-data';
 import { Patient, PatientDocument } from '../schema/patient-schema';
 import { Visit, VisitDocument } from '../schema/visit-schema';
 import { logPatientOperation, logVisitOperation, prepareAddToSetUpdate, prepareUpdateFields } from './utils/utilities';

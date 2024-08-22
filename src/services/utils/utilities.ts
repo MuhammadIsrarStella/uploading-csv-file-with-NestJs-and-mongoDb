@@ -5,8 +5,8 @@ import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { Logger } from '@nestjs/common';
 import { Types } from 'mongoose';
-import { ProcessedData } from 'src/interfaces/Processed-data';
-import { VisitDocument } from 'src/schema/visit-schema';
+import { ProcessedData } from '../../interfaces/Processed-data';
+import { VisitDocument } from '../../schema/visit-schema';
 
 export function sanitizeInput(input: any): string {
   if (typeof input !== 'string') {
