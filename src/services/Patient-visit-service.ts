@@ -1,10 +1,11 @@
+
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ProcessedData } from '../interfaces/Processed-data';
 import { Patient, PatientDocument } from '../schema/patient-schema';
 import { Visit, VisitDocument } from '../schema/visit-schema';
-import { logPatientOperation, logVisitOperation, prepareAddToSetUpdate, prepareUpdateFields } from './utils/utilities';
+import { logPatientOperation, logVisitOperation, prepareUpdateFields } from './utils/utilities';
 
 @Injectable()
 export class PatientVisitService {
@@ -17,6 +18,7 @@ export class PatientVisitService {
 
   async updatePatientAndVisit(data: ProcessedData): Promise<void> {
     const { mrn, firstName, lastName, visitType, visitDate } = data;
+
     let patient = await this.patientModel.findOne({ mrn });
     const patientOperation = patient ? 'updated' : 'created';
 
@@ -28,6 +30,8 @@ export class PatientVisitService {
 
     const patientId = patient._id as Types.ObjectId;
     logPatientOperation(this.logger, mrn, patientId, patientOperation);
+
+    // Find or create the visit record
     let visit = await this.visitModel.findOne({ mrn, visitType, visitDate });
     const visitOperation = visit ? 'updated' : 'created';
 
@@ -49,10 +53,18 @@ export class PatientVisitService {
         { mrn, visitType, visitDate },
         { $set: updateFields }
       );
-      const addToSetUpdate = prepareAddToSetUpdate(data);
       await this.visitModel.updateOne(
         { mrn, visitType, visitDate },
-        { $addToSet: addToSetUpdate }
+        {
+          $addToSet: {
+            icdCodes: { $each: data.icdCodes },
+            ...Object.fromEntries(
+              Object.entries(data.questionnaire).map(([key, value]) => [
+                `questionnaire.${key}`, { $each: value }
+              ])
+            )
+          }
+        }
       );
     }
 
