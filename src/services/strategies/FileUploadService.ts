@@ -6,7 +6,7 @@ import { ExcelFileUploadService } from '../Excel-file-upload-service';
 export class FileUploadService {
   constructor(private readonly excelFileUploadService: ExcelFileUploadService) {}
 
-  async handleFileUpload(file: Express.Multer.File, operation: 'POST' | 'UPDATE') {
+  async handleFileUpload(file: Express.Multer.File, operation: 'POST') {
     if (!file) {
       throw new BadRequestException('File is required');
     }
@@ -14,9 +14,7 @@ export class FileUploadService {
     try {
       if (operation === 'POST') {
         return await this.excelFileUploadService.processNewFile(file.buffer);
-      } else if (operation === 'UPDATE') {
-        return await this.excelFileUploadService.updateExistingFile(file.buffer);
-      }
+      } 
     } catch (error) {
       console.log("Error object:", error);
       console.log("Error message:", error.message);
