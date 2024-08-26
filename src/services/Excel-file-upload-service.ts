@@ -17,7 +17,5 @@ export class ExcelFileUploadService {
     return await this.excelFileProcessor.processingFile(buffer);
   }
 
-  async updateExistingFile(buffer: Buffer): Promise<ProcessedData[]> {
-    return await this.excelFileProcessor.processingFile(buffer);
-  }
+ 
 }
