@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Patient, PatientDocument } from '../schema/patient-schema';
 import { Visit, VisitDocument } from '../schema/visit-schema';
-import { ProcessedData } from 'src/interfaces/Processed-data';
+import { MergedPatientVisitRecord, ProcessedData } from '../interfaces/Processed-data';
 
 @Injectable()
 export class PatientVisitService {
@@ -20,9 +20,9 @@ export class PatientVisitService {
    * with null or empty values for specific fields. The resulting documents include selected fields
    * from both the patient and visit records, combined into a single document.
    * 
-   * @returns {Promise<any[]>} An array of merged patient and visit records.
+   * @returns {Promise<MergedPatientVisitRecord[]>} An array of merged patient and visit records.
    */
-  async gettingMergedPatientVisitRecords(): Promise<any[]> {
+  async gettingMergedPatientVisitRecords(): Promise<MergedPatientVisitRecord[]> {
     const aggregateAllData = await this.patientModel.aggregate([
       {
         $lookup: {
