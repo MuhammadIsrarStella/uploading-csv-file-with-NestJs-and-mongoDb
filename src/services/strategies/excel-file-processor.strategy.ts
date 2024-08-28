@@ -1,4 +1,3 @@
-
 import * as XLSX from 'xlsx';
 import { Injectable } from '@nestjs/common';
 import { FileProcessor } from '../../interfaces/File-processor';
@@ -7,7 +6,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ExcelFileData, ExcelFileDataDocument } from '../../schema/Excel-file-data';
 import { PatientVisitService } from '../Patient-visit-service';
-
 import { InvalidHeaderException, ExcelFileProcessingException } from '../../exceptions/excel-file-processing.exception';
 import { extractQuestionnaire, extractValues, formatDate, handleNullOrEmpty, isRowEmpty, mapRowToDataObject, sanitizeInput, splitFullName, validateProcessedData } from '../utils/utilities';
 
@@ -18,6 +16,14 @@ export class ExcelFileProcessor implements FileProcessor {
     private readonly patientVisitService: PatientVisitService,
   ) {}
 
+  /**
+   * Processing the uploaded Excel and CSV file, transforming each row into a structured format,
+   * updating or creating corresponding patient and visit records in the database, 
+   * and merging the processed data for output.
+   * 
+   * @param {Buffer} buffer - The buffer of the uploaded Excel and CSV file.
+   * @returns {Promise<ProcessedData[]>} An array of processed data objects.
+   */
   async processingFile(buffer: Buffer): Promise<ProcessedData[]> {
     const workbook = XLSX.read(buffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
@@ -43,9 +49,19 @@ export class ExcelFileProcessor implements FileProcessor {
       rowIndex++;
     }
 
+    // Fetching and logging the merged patient and visit records after processing the file
+    const mergedRecords = await this.patientVisitService.gettingMergedPatientVisitRecords();
+    console.log(JSON.stringify(mergedRecords, null, 2));
+
     return processedData;
   }
 
+  /**
+   * Validating that the necessary headers are present in the uploaded Excel file.
+   * 
+   * @param {string[]} headers - The headers extracted from the  file.
+   * @throws {InvalidHeaderException} If required headers are missing.
+   */
   private validateHeaders(headers: string[]): void {
     const requiredHeaders = ['MRN', 'BranchCode', 'form', 'admitDate'];
     const missingHeaders = requiredHeaders.filter(header => !headers.includes(header));
@@ -55,6 +71,13 @@ export class ExcelFileProcessor implements FileProcessor {
     }
   }
 
+  /**
+   * Transforming a row from the file into a structured `ProcessedData` object.
+   * 
+   * @param {string[]} row - The row data from the Excel file.
+   * @param {string[]} headers - The headers corresponding to the row data.
+   * @returns {ProcessedData} A structured data object will performs further processing.
+   */
   private transformRowToProcessedData(row: string[], headers: string[]): ProcessedData {
     const data = mapRowToDataObject(row, headers);
 
@@ -88,6 +111,12 @@ export class ExcelFileProcessor implements FileProcessor {
     return processedData;
   }
 
+  /**
+   * Storing the processed data in the `ExcelFileData` schema.
+   * 
+   * @param {ProcessedData} data - The structured data object to be stored.
+   * @throws {ExcelFileProcessingException} If the data fails to save in the database.
+   */
   private async storeDataInSchema(data: ProcessedData): Promise<void> {
     try {
       const newExcelFileData = new this.excelFileDataModel(data);
