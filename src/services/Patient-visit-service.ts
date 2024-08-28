@@ -23,7 +23,7 @@ export class PatientVisitService {
    * @returns {Promise<any[]>} An array of merged patient and visit records.
    */
   async gettingMergedPatientVisitRecords(): Promise<any[]> {
-    const aggregation = await this.patientModel.aggregate([
+    const aggregateAllData = await this.patientModel.aggregate([
       {
         $lookup: {
           from: 'visits',
@@ -63,7 +63,7 @@ export class PatientVisitService {
       }
     ]);
 
-    return aggregation;
+    return aggregateAllData;
   }
 
   /**
