@@ -12,6 +12,7 @@ import { ExcelFileData, ExcelFileDataSchema } from './schema/Excel-file-data';
 import { PatientVisitService } from './services/Patient-visit-service';
 import { Patient, PatientSchema } from './schema/patient-schema';
 import { Visit, VisitSchema } from './schema/visit-schema';
+import { PatientVisitMergedService } from './services/patient-visit-records-merged';
 
 @Module({
   imports: [
@@ -40,7 +41,8 @@ import { Visit, VisitSchema } from './schema/visit-schema';
     ExcelFileProcessor,
     FileFilterService,
     FileUploadService,
-    PatientVisitService
+    PatientVisitService,
+    PatientVisitMergedService
   ],
   controllers: [FileUploadController],
 })

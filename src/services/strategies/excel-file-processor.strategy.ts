@@ -49,9 +49,7 @@ export class ExcelFileProcessor implements FileProcessor {
       rowIndex++;
     }
 
-    // Fetching and logging the merged patient and visit records after processing the file
-    const mergedRecords = await this.patientVisitService.gettingMergedPatientVisitRecords();
-    console.log(JSON.stringify(mergedRecords, null, 2));
+ 
 
     return processedData;
   }
