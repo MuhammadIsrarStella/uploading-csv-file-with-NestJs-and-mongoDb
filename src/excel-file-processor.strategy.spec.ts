@@ -1,6 +1,6 @@
 import { ExcelFileProcessor } from './services/strategies/excel-file-processor.strategy';
 import { Model } from 'mongoose';
-import { ExcelFileDataDocument } from './schema/Excel-file-data';
+import { ExcelFileDataDocument } from './schema/excel-file-data';
 import { PatientVisitService } from './services/Patient-visit-service';
 import { sanitizeInput, handleNullOrEmpty, splitFullName, extractIcdCodes, isRowEmpty, mapRowToDataObject, formatDate, validateProcessedData, extractQuestionnaire } from './services/utils/utilities';
 import { ExcelFileProcessingException } from './exceptions/excel-file-processing.exception';

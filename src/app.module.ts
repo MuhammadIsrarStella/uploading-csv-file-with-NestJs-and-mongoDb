@@ -8,11 +8,13 @@ import { ExcelFileProcessor } from './services/strategies/excel-file-processor.s
 import { FileUploadController } from './controller/file-upload.controller';
 import { FileUploadService } from './services/strategies/FileUploadService';
 import { FileFilterService } from './file-filter/file-filter-service';
-import { ExcelFileData, ExcelFileDataSchema } from './schema/Excel-file-data';
+import { ExcelFileData, ExcelFileDataSchema } from './schema/excel-file-data';
 import { PatientVisitService } from './services/Patient-visit-service';
 import { Patient, PatientSchema } from './schema/patient-schema';
 import { Visit, VisitSchema } from './schema/visit-schema';
 import { PatientVisitMergedService } from './services/patient-visit-records-merged';
+import { NoVisitSchema } from './schema/no-visit-schema';
+import { NoVisitService } from './services/no-visit-service';
 
 @Module({
   imports: [
@@ -32,7 +34,8 @@ import { PatientVisitMergedService } from './services/patient-visit-records-merg
     MongooseModule.forFeature([
       { name: Patient.name, schema: PatientSchema },
       { name: Visit.name, schema: VisitSchema },
-      { name: ExcelFileData.name, schema: ExcelFileDataSchema }
+      { name: ExcelFileData.name, schema: ExcelFileDataSchema },
+      { name: 'NoVisit', schema: NoVisitSchema }
     ]),
   ],
   providers: [
@@ -42,7 +45,8 @@ import { PatientVisitMergedService } from './services/patient-visit-records-merg
     FileFilterService,
     FileUploadService,
     PatientVisitService,
-    PatientVisitMergedService
+    PatientVisitMergedService,
+    NoVisitService
   ],
   controllers: [FileUploadController],
 })

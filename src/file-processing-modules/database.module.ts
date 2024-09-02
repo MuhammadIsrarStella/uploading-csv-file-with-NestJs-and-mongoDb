@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ExcelFileData, ExcelFileDataSchema } from '../schema/Excel-file-data';
+import { ExcelFileData, ExcelFileDataSchema } from '../schema/excel-file-data';
 
 @Module({
   imports: [

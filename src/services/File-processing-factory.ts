@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { FileProcessor } from '../interfaces/File-processor';
 import { ExcelFileProcessor } from './strategies/excel-file-processor.strategy';
-import { ExcelFileData, ExcelFileDataDocument } from '../schema/Excel-file-data';
+import { ExcelFileData, ExcelFileDataDocument } from '../schema/excel-file-data';
 import { PatientVisitService } from './Patient-visit-service';
 
 @Injectable()

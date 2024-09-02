@@ -4,7 +4,7 @@ import { FileProcessor } from '../../interfaces/File-processor';
 import { ProcessedData } from '../../interfaces/Processed-data';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { ExcelFileData, ExcelFileDataDocument } from '../../schema/Excel-file-data';
+import { ExcelFileData, ExcelFileDataDocument } from '../../schema/excel-file-data';
 import { PatientVisitService } from '../Patient-visit-service';
 import { InvalidHeaderException, ExcelFileProcessingException } from '../../exceptions/excel-file-processing.exception';
 import { extractQuestionnaire, extractValues, formatDate, handleNullOrEmpty, isRowEmpty, mapRowToDataObject, sanitizeInput, splitFullName, validateProcessedData } from '../utils/utilities';

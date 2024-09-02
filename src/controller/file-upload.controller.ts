@@ -15,13 +15,32 @@ import { FileFilterPipe } from '../custom-file-decorator/file-filter.decorator';
 import { FileUploadService } from 'src/services/strategies/FileUploadService';
 import { UploadFileDto } from 'src/dto/upload-file.dto';
 import { PatientVisitMergedService } from 'src/services/patient-visit-records-merged';
+import { NoVisitService } from 'src/services/no-visit-service';
 
 @Controller('file-upload')
 export class FileUploadController {
   constructor(
     private readonly fileUploadService: FileUploadService,
     private readonly mergePatientVisitService: PatientVisitMergedService, 
+    private readonly noVisitService: NoVisitService
   ) {}
+  @Get('no-visit')
+  async getNoVisitRecords(@Res() res: Response) {
+    try {
+      const records = await this.noVisitService.findNoVisitRecords();
+      return res.status(HttpStatus.OK).json(
+        records.length > 0
+          ? records
+          : { message: 'No records found that are not in the visit collection.' }
+      );
+      
+    } catch (error) {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        message: 'Error retrieving records.',
+        error: error.message,
+      });
+    }
+  }
 
   @Post()
   @UseInterceptors(FileInterceptor('file'))
