@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { NoVisitDocument } from '../schema/no-visit-schema';
-import { VisitDocument } from '../schema/visit-schema';
 
 @Injectable()
 export class NoVisitService {
